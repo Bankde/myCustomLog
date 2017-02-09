@@ -1,0 +1,2 @@
+Simple stupid Wrapper class of python logger.
+This will make log easier plus some customized functions that work with extra modules like fbchat.
