@@ -22,10 +22,10 @@ testApp.log
 ```
 
 # Class Setting and Default value
-- maxFileSizeKB=10000  
-New file will be created when current file exceeds 10000KB  
-- fileRoundRobin=-1  
-By default, new files will be created infinitely. If you set fileRoundRobin to some number, the number of log.num files will be no greater than your config. Older log file will be deleted.  
+- maxKB=10000  
+New file will be created when current file exceeds 10000KB. Set maxKB to -1 to ignore file size.  
+- backupCount=-1  
+By default, new files will be created infinitely (max 1000, noone should ever exceeds this amount anyway). If you set this to some number, the log files will be rotated with count no greather than that number. (This config does nothing if setting maxKB to -1)  
 - saveFile=None  
 You might not want a log but a simple save data file, set path here. You can save your data as simple as below example (warning, overwrite if append=0)  
 ```
