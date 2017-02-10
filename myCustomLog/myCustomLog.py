@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import logging
+import logging.handlers
 import os
 import datetime
 
@@ -26,7 +27,7 @@ class myCustomLog:
     ERROR = 40
     CRITICAL = 50
 
-    def __init__(self, appName, logPath=".", saveFile=None, level=logging.INFO, format='%(asctime)s, %(name)s, %(levelname)s, %(message)s', maxFileSizeKB=10000, fileRoundRobin=-1, fbchatClient=None):
+    def __init__(self, appName, logPath=".", saveFile=None, level=logging.INFO, format='%(asctime)s, %(name)s, %(levelname)s, %(message)s', maxKB=10000, backupCount=-1, fbchatClient=None):
         self.logger = logging.getLogger(appName)
         self.logger.setLevel(level)
 
@@ -34,15 +35,12 @@ class myCustomLog:
             logPath = logPath + "/"
 
         self.logFile = logPath + appName + '.log'
-        self.maxFileSizeKB = maxFileSizeKB
-        self.fileRoundRobin = fileRoundRobin
-        # check for existing file
-        self._checkLogFileSizeExceed()
-
+        self.maxBytes = (maxKB*1024)
+        self.backupCount = backupCount
         self.logLevel = level
         self.logFormat = format
 
-        self.setFileHandler(self.logFile)
+        self.setFileHandler()
 
         # save file, make sure directory exists
         self.saveFile = saveFile
@@ -55,9 +53,16 @@ class myCustomLog:
         def setFbChatClient(self, fbchatClient):
             self.client = fbchatClient
 
-    def setFileHandler(self, logFile):
+    def setFileHandler(self):
         # create file handler
-        fh = logging.FileHandler(logFile)
+        if self.maxBytes < 0:
+            fh = logging.FileHandler(self.logFile)
+        else:
+            if self.backupCount == -1:
+                fh = logging.handlers.RotatingFileHandler(self.logFile, maxBytes=self.maxBytes, backupCount=1000)
+            else:
+                fh = logging.handlers.RotatingFileHandler(self.logFile, maxBytes=self.maxBytes, backupCount=self.backupCount)
+        
         fh.setLevel(self.logLevel)
         # create formatter and add to file handler
         formatter = logging.Formatter(self.logFormat)
@@ -66,29 +71,8 @@ class myCustomLog:
         self.logger.handlers = []
         self.logger.addHandler(fh)
 
-    def _fileIncreaseVer(self, rename_file, run=1):
-        if not self.fileRoundRobin == -1 and run > self.fileRoundRobin:
-            return False
-        newFile = self.logFile + ".%d" % (run)
-        if os.path.isfile(newFile):
-            run += 1
-            self._fileIncreaseVer(newFile, run)
-        os.rename(rename_file, newFile) 
-        return True
-
-    def _checkLogFileSizeExceed(self):
-        if self.maxFileSizeKB < 0:
-            return False
-        if os.path.isfile(self.logFile) and (os.path.getsize(self.logFile)/1000) >= self.maxFileSizeKB:
-            # old file exists and exceed the size, change its name
-            return self._fileIncreaseVer(self.logFile)
-
-    def start_new_logFile(self):
-        self._fileIncreaseVer(self.logFile)
 
     def log(self, message, level=logging.INFO):
-        if self._checkLogFileSizeExceed():
-            self.setFileHandler(self.logFile)
         self.logger.log(level, message)
 
     def chat(self, message, uid):
