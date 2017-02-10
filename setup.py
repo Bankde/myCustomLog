@@ -14,7 +14,7 @@ setup(
     keywords = "python logger wrapper fbchat easy",
     url = "https://github.com/Bankde/myCustomLog",
     packages=['myCustomLog'],
-    long_description=read('README'),
+    long_description=read('README.md'),
     classifiers=[
         "Development Status :: 1 - Alpha",
         "Topic :: Utilities",

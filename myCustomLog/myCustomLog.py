@@ -37,17 +37,12 @@ class myCustomLog:
         self.maxFileSizeKB = maxFileSizeKB
         self.fileRoundRobin = fileRoundRobin
         # check for existing file
-        self.logFileSizeExceedAction()
+        self._checkLogFileSizeExceed()
 
-        # create file handler
-        fh = logging.FileHandler(self.logFile)
-        fh.setLevel(level)
-        # create formatter and add to file handler
-        formatter = logging.Formatter(format)
-        fh.setFormatter(formatter)
-        # add file handler to logger (and remove old handler, if exists)
-        self.logger.handlers = []
-        self.logger.addHandler(fh)
+        self.logLevel = level
+        self.logFormat = format
+
+        self.setFileHandler(self.logFile)
 
         # save file, make sure directory exists
         self.saveFile = saveFile
@@ -60,24 +55,40 @@ class myCustomLog:
         def setFbChatClient(self, fbchatClient):
             self.client = fbchatClient
 
-    def fileIncreaseVer(self, rename_file, run=1):
+    def setFileHandler(self, logFile):
+        # create file handler
+        fh = logging.FileHandler(logFile)
+        fh.setLevel(self.logLevel)
+        # create formatter and add to file handler
+        formatter = logging.Formatter(self.logFormat)
+        fh.setFormatter(formatter)
+        # add file handler to logger (and remove old handler, if exists)
+        self.logger.handlers = []
+        self.logger.addHandler(fh)
+
+    def _fileIncreaseVer(self, rename_file, run=1):
         if not self.fileRoundRobin == -1 and run > self.fileRoundRobin:
             return False
         newFile = self.logFile + ".%d" % (run)
         if os.path.isfile(newFile):
             run += 1
-            self.fileIncreaseVer(newFile, run)
+            self._fileIncreaseVer(newFile, run)
         os.rename(rename_file, newFile) 
         return True
 
-    def logFileSizeExceedAction(self):
+    def _checkLogFileSizeExceed(self):
         if self.maxFileSizeKB < 0:
             return False
         if os.path.isfile(self.logFile) and (os.path.getsize(self.logFile)/1000) >= self.maxFileSizeKB:
             # old file exists and exceed the size, change its name
-            return self.fileIncreaseVer(self.logFile)
+            return self._fileIncreaseVer(self.logFile)
+
+    def start_new_logFile(self):
+        self._fileIncreaseVer(self.logFile)
 
     def log(self, message, level=logging.INFO):
+        if self._checkLogFileSizeExceed():
+            self.setFileHandler(self.logFile)
         self.logger.log(level, message)
 
     def chat(self, message, uid):
