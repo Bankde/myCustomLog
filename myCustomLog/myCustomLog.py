@@ -27,6 +27,22 @@ class myCustomLog:
     ERROR = 40
     CRITICAL = 50
 
+    # read config file method
+    # config is in "key value" format
+    @staticmethod
+    def readConfig(configFile, confList=None):
+        if confList == None:
+            confList = {}
+        with open(configFile, "r") as conf:
+            for line in conf:
+                sline = line.strip()
+                if len(sline) == 0 or sline[0] == '#':
+                    continue
+                s = sline.split()
+                assert(len(s) == 2)
+                confList[s[0]] = s[1]
+        return confList
+
     def __init__(self, appName, logPath=".", saveFile=None, level=logging.INFO, format='%(asctime)s, %(name)s, %(levelname)s, %(message)s', maxKB=10000, backupCount=-1, fbchatClient=None):
         self.logger = logging.getLogger(appName)
         self.logger.setLevel(level)
