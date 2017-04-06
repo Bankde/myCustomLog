@@ -5,12 +5,6 @@ import logging.handlers
 import os
 import datetime
 
-try:
-    import fbchat
-    en_fbchat = True
-except ImportError:
-    en_fbchat = False
-
 # static var on log level
 DEBUG = 10
 INFO = 20
@@ -43,7 +37,7 @@ class myCustomLog:
                 confList[s[0]] = s[1]
         return confList
 
-    def __init__(self, appName, logPath=".", saveFile=None, level=logging.INFO, format='%(asctime)s, %(name)s, %(levelname)s, %(message)s', maxKB=10000, backupCount=-1, fbchatClient=None):
+    def __init__(self, appName, logPath=".", saveFile=None, level=logging.INFO, format='%(asctime)s, %(name)s, %(levelname)s, %(message)s', maxKB=10000, backupCount=-1):
         self.logger = logging.getLogger(appName)
         self.logger.setLevel(level)
 
@@ -60,14 +54,6 @@ class myCustomLog:
 
         # save file, make sure directory exists
         self.saveFile = saveFile
-
-        # if we use fbchat in log
-        if en_fbchat and fbchatClient:
-            self.client = fbchatClient
-
-    if en_fbchat:
-        def setFbChatClient(self, fbchatClient):
-            self.client = fbchatClient
 
     def setFileHandler(self):
         # create file handler
@@ -91,33 +77,13 @@ class myCustomLog:
     def log(self, message, level=logging.INFO):
         self.logger.log(level, message)
 
-    def chat(self, message, uid):
-        if en_fbchat == 1:
-            # check if uid is array
-            if hasattr(uid, '__iter__'):
-                for i in uid:
-                    sent = self.client.send(i, message)
-                    if not sent:
-                        self.logAndPrint("fbchat sent error\r\n", level=logging.ERROR)
-            else:
-                sent = self.client.send(uid, message)
-                if not sent:
-                    self.logAndPrint("fbchat sent error\r\n", level=logging.ERROR)
-        else:
-            self.logAndPrint("fbchat not enabled, please install fbchat first\r\n\t$ pip install fbchat")
-
     def logAndPrint(self, message, level=logging.INFO):
         self.log(message, level)
         print message 
 
-    def logAndChat(self, message, uid, level=logging.INFO):
-        self.log(message, level)
-        self.chat(message, uid)
-
-    def logAll(self, message, uid, level=logging.INFO):
+    def logAll(self, message, level=logging.INFO):
         self.log(message, level)
         print message
-        self.chat(message, uid)
 
     def saveData(self, data, append=0):
         try:
