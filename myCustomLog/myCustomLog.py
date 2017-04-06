@@ -7,9 +7,9 @@ import datetime
 
 try:
     import fbchat
-    en_fbchat = 1
+    en_fbchat = True
 except ImportError:
-    en_fbchat = 0
+    en_fbchat = False
 
 # static var on log level
 DEBUG = 10
